@@ -240,7 +240,7 @@ elif mode == "Specific":
             if image_url:
                 saver.save_post(post_text, image_url)
 
-            st.write(f"✅ Saved {i}/{len(stories)}: {topic}")
+           
 
         st.success("All TLDR posts saved!")
 
