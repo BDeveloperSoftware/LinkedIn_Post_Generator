@@ -1,5 +1,3 @@
-# file_saver.py
-
 import requests
 import streamlit as st
 import io
