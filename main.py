@@ -91,7 +91,7 @@ with st.sidebar:
 
 # ─── Main Interface ─────────────────────────────────────────────────────────
 st.title("📢 AI LinkedIn Post Generator")
-mode = st.radio("Choose Mode", ["Manual", "Automated", "TLDR Scraper"], horizontal=True)
+mode = st.radio("Choose Mode", ["Manual", "Automated", "Specific"], horizontal=True)
 
 def generate_all(post_prompt, image_prompt):
     generator = PostGenerator(model_provider)
@@ -202,9 +202,9 @@ elif mode == "Automated":
             st.write(post_text)
             if image_url:
                 st.image(image_url)
-
-elif mode == "TLDR Scraper":
-    st.header("TLDR Mode · TLDR newsletter bulk‑posts")
+# # ───────────────────────── 3. Specific Mode (TLDR Bulk) ───────────────────── 
+elif mode == "Specific":
+    st.header("Specific Mode · TLDR newsletter bulk‑posts")
 
     with st.form("tldr_form"):
         audience = st.text_input("🎯 Target audience *")
@@ -283,6 +283,7 @@ elif mode == "TLDR Scraper":
         )
 
         st.success("All TLDR posts saved!")
+
 
 
 
