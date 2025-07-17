@@ -5,7 +5,7 @@ import os
 
 class PostGenerator:
     def _init_(self, model_provider='GPT-4-Turbo'):
-        self.model_provider = model_provider.lower()
+        self.model_provider = model_provider
         self.OPENAI_API_KEY = st.secrets["api"]["OPENAI_API_KEY"]
         self.GROQ_API_KEY = st.secrets["api"]["GROQ_API_KEY"]
         self.api_key = self.OPENAI_API_KEY if self.model_provider == "GPT-4-Turbo" else self.GROQ_API_KEY
