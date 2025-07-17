@@ -4,16 +4,16 @@ import streamlit as st
 import os
 
 class PostGenerator:
-    def _init_(self, model_provider='openai'):
+    def _init_(self, model_provider='GPT-4-Turbo'):
         self.model_provider = model_provider.lower()
         self.OPENAI_API_KEY = st.secrets["api"]["OPENAI_API_KEY"]
         self.GROQ_API_KEY = st.secrets["api"]["GROQ_API_KEY"]
-        self.api_key = self.OPENAI_API_KEY if self.model_provider == "openai" else self.GROQ_API_KEY
+        self.api_key = self.OPENAI_API_KEY if self.model_provider == "GPT-4-Turbo" else self.GROQ_API_KEY
         self.client = self._init_client()
         self.clint_image = OpenAIClient(api_key=self.OPENAI_API_KEY)
 
     def _init_client(self):
-        if self.model_provider == "openai":
+        if self.model_provider == "GPT-4-Turbo":
             return OpenAIClient(api_key=self.api_key)
         elif self.model_provider == "LLaMA-3-70B":
             return GroqClient(api_key=self.api_key)
