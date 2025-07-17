@@ -15,7 +15,7 @@ class PostGenerator:
     def _init_client(self):
         if self.model_provider == "openai":
             return OpenAIClient(api_key=self.api_key)
-        elif self.model_provider == "groq":
+        elif self.model_provider == "LLaMA-3-70B":
             return GroqClient(api_key=self.api_key)
         else:
             raise ValueError("Unsupported model provider")
