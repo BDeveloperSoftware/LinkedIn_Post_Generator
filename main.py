@@ -70,7 +70,7 @@ def build_image_prompt(topic):
     return Template(IMAGE_TEMPLATE).render(topic=topic)
 
 def provider_from_choice(label):
-    return "openai" if label.startswith("GPT‑4") else "groq"
+    return "GPT-4-Turbo" if label.startswith("gpt4") else "groq"
 
 # ─── Streamlit Config ───────────────────────────────────────────────────────
 st.set_page_config(page_title="🚀 AI LinkedIn Post Generator", layout="wide")
