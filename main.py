@@ -91,7 +91,7 @@ with st.sidebar:
 
 # ─── Main Interface ─────────────────────────────────────────────────────────
 st.title("📢 AI LinkedIn Post Generator")
-mode = st.radio("Choose Mode", ["Manual", "Automated", "Specific"], horizontal=True)
+mode = st.radio("Choose Mode", ["Manual", "Automated", "TLDR Scraper"], horizontal=True)
 
 def generate_all(post_prompt, image_prompt):
     generator = PostGenerator(model_provider)
