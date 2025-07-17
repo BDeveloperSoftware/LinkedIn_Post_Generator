@@ -4,7 +4,7 @@ import streamlit as st
 import os
 
 class PostGenerator:
-    def __init__(self, model_provider='openai'):
+    def _init_(self, model_provider='openai'):
         self.model_provider = model_provider.lower()
         self.OPENAI_API_KEY = st.secrets["api"]["OPENAI_API_KEY"]
         self.GROQ_API_KEY = st.secrets["api"]["GROQ_API_KEY"]
@@ -21,7 +21,7 @@ class PostGenerator:
             raise ValueError("Unsupported model provider")
 
     def generate_post_text(self, article_prompt):
-        model = "gpt-4-turbo" if self.model_provider == "openai" else "llama3-70b-8192"
+        model = "gpt-4-turbo" if self.model_provider == "GPT-4-Turbo" else "llama3-70b-8192"
         full_prompt = f"""
                 Here is a sample of previous successful LinkedIn posts for inspiration(tone, style, length, etc.):
                 {article_prompt}
