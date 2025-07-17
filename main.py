@@ -7,6 +7,9 @@ from fileSaver import SimpleSaver
 from postgenerator import PostGenerator
 from newsscrapper import GNewsAgent
 from data_collection import TLDRNewsFetcher
+import io
+import zipfile
+import requests
 
 # ─── Security Check (Passkey via URL) ────────────────────────────────────────
 query_params = st.query_params
@@ -33,13 +36,13 @@ BASE_REQUIREMENTS = """
 3. Tone: professional, authentic, lightly conversational.
 4. No repetition; every sentence adds value.
 5. ≤ {word_limit} words.
-6. **Do not** include hashtags, links, “thank you”, “sorry”, or emojis beyond 1-2 tasteful ones.
+6. *Do not* include hashtags, links, “thank you”, “sorry”, or emojis beyond 1-2 tasteful ones.
 """
 
 POST_TEMPLATE = """
 You are a LinkedIn content strategist.
 
-Craft a high quality post on **{{ topic }}** for **{{ audience }}**.
+Craft a high quality post on *{{ topic }}* for *{{ audience }}*.
  
 Context:
 • Location: {{ location }}
@@ -49,7 +52,7 @@ Context:
 """
 
 IMAGE_TEMPLATE = """
-Design a clean, modern, text-free image illustrating **{{ topic }}**.
+Design a clean, modern, text-free image illustrating *{{ topic }}*.
 Style: minimal, bright brand palette; single focal concept; subtle depth.
 """
 
@@ -82,7 +85,7 @@ with st.sidebar:
     word_limit = st.slider("Word limit", 50, 300, 120, step=10)
     model_choice = st.selectbox(
         "AI model",
-        ["GPT-4-Turbo (premium quality)", "LLaMA-3-70B (fast & economical)"],
+        ["GPT-4-Turbo", "LLaMA-3-70B"],
     )
     model_provider = provider_from_choice(model_choice)
 
@@ -101,7 +104,7 @@ def generate_all(post_prompt, image_prompt):
             if "billing_hard_limit_reached" in str(e):
                 st.warning("🔒 OpenAI billing limit reached. Image generation is disabled.")
             else:
-                st.warning(f"⚠️ Error generating image. Reason: {str(e)}")
+                st.warning(f"⚠ Error generating image. Reason: {str(e)}")
             image_url = None
     return post_text, image_url
 
@@ -163,9 +166,9 @@ elif mode == "Automated":
         article = st.session_state.news_options[sel_idx][1]
 
         with st.expander("Preview article"):
-            st.write("**Title:**", article["title"])
-            st.write("**Summary:**", article.get("summary", "N/A"))
-            st.write("**Source:**", article.get("source", "N/A"))
+            st.write("*Title:*", article["title"])
+            st.write("*Summary:*", article.get("summary", "N/A"))
+            st.write("*Source:*", article.get("source", "N/A"))
 
         with st.form("auto_form"):
             audience = st.text_input("🎯 Target audience *")
@@ -200,9 +203,8 @@ elif mode == "Automated":
             if image_url:
                 st.image(image_url)
 
-# ───────────────────────── 3. Specific Mode (TLDR Bulk) ─────────────────────
-elif mode == "Specific":
-    st.header("Specific Mode · TLDR newsletter bulk‑posts")
+elif mode == "TLDR Scraper":
+    st.header("TLDR Mode · TLDR newsletter bulk‑posts")
 
     with st.form("tldr_form"):
         audience = st.text_input("🎯 Target audience *")
@@ -222,6 +224,8 @@ elif mode == "Specific":
             st.stop()
 
         generator = PostGenerator(model_provider)
+        post_list = []
+
         for i, story in enumerate(stories, 1):
             topic = story.get("title") or story.get("text", "")[:60]
             summary = story.get("summary", story.get("text", ""))
@@ -234,26 +238,63 @@ elif mode == "Specific":
             try:
                 image_url = generator.generate_image(image_prompt)
             except Exception as e:
-                st.warning(f"⚠️ Error generating image for {topic}: {str(e)}")
+                st.warning(f"⚠ Error generating image for {topic}: {str(e)}")
                 image_url = None
 
-            if image_url:
-                saver.save_post(post_text, image_url)
+            post_list.append({
+                "index": i,
+                "topic": topic,
+                "post_text": post_text,
+                "image_url": image_url,
+            })
 
-           
+            with st.expander(f"📄 Post #{i}: {topic}", expanded=False):
+                st.markdown(post_text)
+                if image_url:
+                    st.image(image_url)
+
+
+        zip_buffer = io.BytesIO()
+        with zipfile.ZipFile(zip_buffer, "w") as zipf:
+            for post in post_list:
+                folder = f"TLDR_Posts/Post_{post['index']}"
+                topic_clean = post["topic"].replace(" ", "_")[:40]
+
+                # Add post text
+                txt_path = f"{folder}/Post_{post['index']}_{topic_clean}.txt"
+                zipf.writestr(txt_path, post["post_text"])
+
+                # Add image if valid
+                if post["image_url"]:
+                    try:
+                        resp = requests.get(post["image_url"], timeout=10)
+                        if resp.status_code == 200:
+                            img_path = f"{folder}/Post_{post['index']}_{topic_clean}.png"
+                            zipf.writestr(img_path, resp.content)
+                    except Exception as e:
+                        st.warning(f"⚠ Image fetch failed for post {post['index']}: {e}")
+
+        zip_buffer.seek(0)
+        st.download_button(
+            label="📦 Download All Posts + Images (ZIP)",
+            data=zip_buffer,
+            file_name="TLDR_Posts_Bundle.zip",
+            mime="application/zip"
+        )
 
         st.success("All TLDR posts saved!")
 
-# ───────────────────────────── Session History ──────────────────────────────
+
+
 if st.session_state.history:
     st.markdown("### 📄 Session History")
     i = st.session_state.history_index
     col1, col2 = st.columns(2)
     with col1:
-        if st.button("⬅️ Previous") and i > 0:
+        if st.button("⬅ Previous") and i > 0:
             st.session_state.history_index -= 1
     with col2:
-        if st.button("Next ➡️") and i < len(st.session_state.history) - 1:
+        if st.button("Next ➡") and i < len(st.session_state.history) - 1:
             st.session_state.history_index += 1
 
     record = st.session_state.history[st.session_state.history_index]
